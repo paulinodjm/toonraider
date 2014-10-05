@@ -14,7 +14,12 @@ public abstract class CharacterLogic<Character_T> : MonoBehaviour, ICharacter<Ch
     /// </summary>
     /// <param name="interaction"></param>
     /// <returns></returns>
-    public abstract bool CanInteractWith(Interaction_Old interaction);
+    public abstract bool CanInteractWith(Interactible interaction);
+
+    /// <summary>
+    /// Tell if the player wants to do a jump
+    /// </summary>
+    public abstract bool WantJump { get; }
 
     protected void Awake()
     {

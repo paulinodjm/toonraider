@@ -6,7 +6,7 @@ using System.Collections;
 /// </summary>
 public class LaraJumping : LaraWalking
 {
-    public override bool CanInteractWith(Interaction_Old interaction)
+    public override bool CanInteractWith(Interactible interaction)
     {
         var ledge = interaction as Ledge;
         return ledge != null;

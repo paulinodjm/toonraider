@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// Futur old interaction system...
+/// Base class for each object that can be used by the player
 /// </summary>
-public abstract class Interaction_Old : MonoBehaviour
+public abstract class Interactible : MonoBehaviour
 {
     public abstract string Caption { get; }
 
@@ -31,9 +31,9 @@ public abstract class Interaction_Old : MonoBehaviour
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static explicit operator Interaction_Old(GameObject obj)
+    public static explicit operator Interactible(GameObject obj)
     {
-        return obj.GetComponent<Interaction_Old>();
+        return obj.GetComponent<Interactible>();
     }
 
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Ledge : Interaction_Old
+public class Ledge : Interactible
 {
     #region Constants
 

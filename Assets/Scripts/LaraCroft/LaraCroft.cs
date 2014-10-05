@@ -8,75 +8,168 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 {
     #region Parameters
 
+    /// <summary>
+    /// The camera target
+    /// </summary>
     public Transform CameraTarget;
 
+    /// <summary>
+    /// The walk speed
+    /// </summary>
     public float WalkSpeed;
+
+    /// <summary>
+    /// The run speed
+    /// </summary>
     public float RunSpeed;
+
+    /// <summary>
+    /// The rotation speed
+    /// </summary>
     public float RotationSpeed;
+
+    /// <summary>
+    /// The vertical jump speed
+    /// </summary>
 	public float JumpSpeed;
+
+    /// <summary>
+    /// The horizontal acceleration when jumping
+    /// </summary>
     public float JumpAccel;
+
+    /// <summary>
+    /// The gravity
+    /// </summary>
 	public float Gravity;
+
+    /// <summary>
+    /// The falling speed threshold (when landing hurts)
+    /// </summary>
     public float FallingSpeed;
 
+    /// <summary>
+    /// The distance needed to pick up something
+    /// </summary>
     public float PickupDistance;
 
+    /// <summary>
+    /// The player camera
+    /// </summary>
 	public Transform Camera { get; set; }
+
+    /// <summary>
+    /// The point to attach picked items
+    /// </summary>
     public Transform HandItem;
 
+    /// <summary>
+    /// The inventory
+    /// </summary>
     public Inventory Inventory { get; private set; }
 
+    /// <summary>
+    /// The player input
+    /// </summary>
     public PlayerInput InputSettings;
-    public PlayerInput PlayerInput 
-    {
-        get { return InputSettings; } 
-    }
 
     #endregion
+
     #region Components
 
     private CharacterController _characterController;
+
     private Animator _animator;
 
     #endregion
+
     #region Movement
 
+    /// <summary>
+    /// The current velocity
+    /// </summary>
     public Vector3 Velocity { get; private set; }
+
+    /// <summary>
+    /// Tell if the character is currently grounded
+    /// </summary>
     public bool IsGrounded { get; private set; }
 
-    private bool _jump;
-
     #endregion
+
     #region Interactions
 
-    private List<Interaction_Old> _availableInteractions = new List<Interaction_Old>();
-    private Interaction_Old _nearestInteraction;
-    private Interaction_Old _pendingInteraction;
+    private List<Interactible> _availableInteractions = new List<Interactible>();
+
+    /// <summary>
+    /// The nearest interaction (the next to be used)
+    /// </summary>
+    private Interactible _nearestInteraction;
+
+    /// <summary>
+    /// The current interaction, if any
+    /// </summary>
+    private Interactible _currentInteraction;
 
     #endregion
+
     #region Picking up
 
-    public bool CanInteractWith(Interaction_Old interaction)
+    /// <summary>
+    /// Tell if lara can use an interaction
+    /// </summary>
+    /// <param name="interaction"></param>
+    /// <returns></returns>
+    public bool CanInteractWith(Interactible interaction)
     {
         if (_currentLogic == null) return false;
 
         return _currentLogic.CanInteractWith(interaction);
     }
 
+    /// <summary>
+    /// The item being hold
+    /// </summary>
     public GameObject HoldItem { get; private set; }
 
     #endregion
+
     #region States
 
+    /// <summary>
+    /// The current state
+    /// </summary>
     private CharacterLogic<LaraCroft> _currentLogic;
+
+    /// <summary>
+    /// The next state, if any
+    /// </summary>
     private CharacterLogic<LaraCroft> _pendingLogic;
+
+    /// <summary>
+    /// The state used for move transitions (can be inactive)
+    /// </summary>
     private LaraGroundTransition _transitionLogic;
+
+    /// <summary>
+    /// The state dictionnary, by type
+    /// </summary>
     private Dictionary<Type, CharacterLogic<LaraCroft>> _logics = new Dictionary<Type,CharacterLogic<LaraCroft>>();
 
+    /// <summary>
+    /// Jump to the next state
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public void GotoState<T>() where T : CharacterLogic<LaraCroft>
     {
         _pendingLogic = _logics[typeof(T)];
     }
 
+    /// <summary>
+    /// Instanciate a new state
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     private T SpawnLogic<T>() where T : CharacterLogic<LaraCroft>
     {
         var logic = gameObject.AddComponent<T>();
@@ -128,7 +221,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         if (_nearestInteraction != null && CanInteractWith(_nearestInteraction))
         {
             var strBuilder = new StringBuilder();
-            strBuilder.Append((_nearestInteraction.GetStatusFor(this) == Interaction_Old.Status.Avalaible ? " > " : " ? "));
+            strBuilder.Append((_nearestInteraction.GetStatusFor(this) == Interactible.Status.Avalaible ? " > " : " ? "));
             strBuilder.Append(_nearestInteraction.Caption);
             GUILayout.Label(strBuilder.ToString());
         }
@@ -136,6 +229,9 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     #region Interactions
 
+    /// <summary>
+    /// Find the nearest interaction
+    /// </summary>
     private void SortInteractions()
     {
         _nearestInteraction = null;
@@ -144,7 +240,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         {
             var interaction = _availableInteractions[i];
 
-            if (interaction.GetStatusFor(this) == Interaction_Old.Status.Unavailable)
+            if (interaction.GetStatusFor(this) == Interactible.Status.Unavailable)
             {
                 _availableInteractions.Remove(interaction);
             }
@@ -165,19 +261,19 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
             !InputSettings.ButAction
         ) return;
 
-        if (_nearestInteraction.GetStatusFor(this) == Interaction_Old.Status.Incomplete)
+        if (_nearestInteraction.GetStatusFor(this) == Interactible.Status.Incomplete)
         {
             print("I need something!");
             return;
         }
 
-        _pendingInteraction = _nearestInteraction;
+        _currentInteraction = _nearestInteraction;
 
         Vector3 usePosition; Quaternion useRotation;
-        _pendingInteraction.CalcUsePosRot(this, out usePosition, out useRotation);
+        _currentInteraction.CalcUsePosRot(this, out usePosition, out useRotation);
         MakeMoveTransition(
             usePosition, useRotation,
-            () => _animator.SetTrigger(_pendingInteraction.GetActionName(this)),
+            () => _animator.SetTrigger(_currentInteraction.GetActionName(this)),
             true
         );
     }
@@ -195,6 +291,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     }
 
     #endregion
+
     #region Movements
 
     /// <summary>
@@ -219,6 +316,11 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         right.y = 0;
     }
 
+    /// <summary>
+    /// Shortcut for <code>GetAxis(Camera, forward, right)</code>
+    /// </summary>
+    /// <param name="forward"></param>
+    /// <param name="right"></param>
     public void GetAxis(out Vector3 forward, out Vector3 right)
     {
         GetAxis(Camera, out forward, out right);
@@ -275,7 +377,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// <summary>
     /// Plays the animation when walking (or jumping, or falling)
     /// </summary>
-    private void AnimCharacterWalking()
+    private void AnimCharacterWalking() // <- this job has to be done by the current state
     {
         var velocity = Velocity;
         velocity.y = 0;
@@ -299,11 +401,12 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     }
 
     #endregion
+
     #region Items triggering events
 
     void OnTriggerEnter(Collider other)
     {
-        var interaction = (Interaction_Old)other.gameObject;
+        var interaction = (Interactible)other.gameObject;
         if (interaction != null)
         {
             _availableInteractions.Add(interaction);
@@ -312,7 +415,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     void OnTriggerExit(Collider other)
     {
-        var interaction = (Interaction_Old)other.gameObject;
+        var interaction = (Interactible)other.gameObject;
         if (interaction != null)
         {
             _availableInteractions.Remove(interaction);
@@ -320,6 +423,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     }
 
     #endregion
+
     #region Animation events
 
     /// <summary>
@@ -351,7 +455,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void PickupItem()
     {
-        var pendingItem = _pendingInteraction as ItemPickable;
+        var pendingItem = _currentInteraction as ItemPickable;
 
         pendingItem.NotifyUsed();
         GrabItem((GameObject)Instantiate(pendingItem.InventoryItem.Prefab));
@@ -362,13 +466,13 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void BagIn()
     {
-        var pendingItem = _pendingInteraction as ItemPickable;
+        var pendingItem = _currentInteraction as ItemPickable;
 
         Destroy(HoldItem);
         HoldItem = null;
 
         Inventory.Items.Add(pendingItem.InventoryItem);
-        _pendingInteraction = null;
+        _currentInteraction = null;
     }
 
     /// <summary>
@@ -376,7 +480,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void BagOut()
     {
-        var pendingLock = _pendingInteraction as Lock;
+        var pendingLock = _currentInteraction as Lock;
         var usingItem = Inventory.Items.Find(pendingLock.KeyName);
 
         GrabItem((GameObject)Instantiate(usingItem.Prefab));
@@ -389,15 +493,15 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void ItemUsed()
     {
-        var nearestLock = _pendingInteraction as Lock;
+        var nearestLock = _currentInteraction as Lock;
 
         HoldItem.transform.parent = nearestLock.KeyPosition;
         HoldItem.transform.localPosition = Vector3.zero;
         HoldItem.transform.localRotation = Quaternion.identity;
         HoldItem = null;
 
-        _pendingInteraction.NotifyUsed();
-        _pendingInteraction = null;
+        _currentInteraction.NotifyUsed();
+        _currentInteraction = null;
     }
 
     #endregion

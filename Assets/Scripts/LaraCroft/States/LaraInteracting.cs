@@ -6,9 +6,17 @@ using System.Collections;
 /// </summary>
 public class LaraInteracting : LaraWalking 
 {
-    public override bool CanInteractWith(Interaction_Old interaction)
+    public override bool CanInteractWith(Interactible interaction)
     {
         return false;
+    }
+
+    public override bool WantJump
+    {
+        get
+        {
+            return false;
+        }
     }
 
     protected override Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)

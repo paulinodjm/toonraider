@@ -21,9 +21,14 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         GotoState<LaraJumping>();
     }
 
-    public override bool CanInteractWith(Interaction_Old interaction)
+    public override bool CanInteractWith(Interactible interaction)
     {
         return true;
+    }
+
+    public override bool WantJump
+    {
+        get { return Character.InputSettings.ButJump; }
     }
 
     #endregion
@@ -73,7 +78,7 @@ public class LaraWalking : CharacterLogic<LaraCroft>
     /// <param name="move"></param>
     protected virtual void ApplyGravity(ref Vector3 move)
     {
-        if (Character.InputSettings.ButJump)
+        if (WantJump)
         {
             move.y = Character.JumpSpeed;
         }
