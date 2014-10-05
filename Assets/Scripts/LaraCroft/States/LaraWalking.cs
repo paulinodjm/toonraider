@@ -6,7 +6,9 @@ using System.Collections;
 /// </summary>
 public class LaraWalking : CharacterLogic<LaraCroft>
 {
-    public override void PerformMove(ref Vector3 velocity, ref Quaternion rotation)
+    #region CharacterLogic implementation
+
+    public override void CalcVelocityAndRotation(ref Vector3 velocity, ref Quaternion rotation)
     {
         var inputDir = ProcessInput();
         velocity = CalcVelocity(inputDir, velocity);
@@ -14,6 +16,17 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         ApplyGravity(ref velocity);
     }
 
+    public override void Falling()
+    {
+        GotoState<LaraJumping>();
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Transforms the inputs for a horizontal movement
+    /// </summary>
+    /// <returns>The horizontal move direction</returns>
     protected virtual Vector3 ProcessInput()
     {
         Vector3 forward, right;
@@ -24,12 +37,24 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         return (forward + right).normalized;
     }
 
+    /// <summary>
+    /// Calculates the new velocity
+    /// </summary>
+    /// <param name="inputDir"></param>
+    /// <param name="velocity"></param>
+    /// <returns></returns>
     protected virtual Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)
     {
         var moveSpeed = Character.InputSettings.ButWalk ? Character.WalkSpeed : Character.RunSpeed;
         return inputDir * moveSpeed;
     }
 
+    /// <summary>
+    /// Calculates the new rotation
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="rotation"></param>
+    /// <returns></returns>
     protected virtual Quaternion CalcRotation(Vector3 velocity, Quaternion rotation)
     {
         velocity.y = 0;
@@ -37,6 +62,10 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         return Quaternion.Lerp(rotation, desiredRotation, Character.RotationSpeed);
     }
 
+    /// <summary>
+    /// Called once per frame to apply the gravity
+    /// </summary>
+    /// <param name="move"></param>
     protected virtual void ApplyGravity(ref Vector3 move)
     {
         if (Character.InputSettings.ButJump)
@@ -47,10 +76,5 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         {
             move.y = -5;
         }
-    }
-
-    public override void Falling()
-    {
-        GotoState<LaraJumping>();
     }
 }

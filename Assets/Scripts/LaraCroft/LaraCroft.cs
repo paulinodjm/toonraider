@@ -44,7 +44,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     public Vector3 Velocity { get; private set; }
     public bool IsGrounded { get; private set; }
 
-    private MoveTransition _moveTransition;
     private bool _jump;
 
     #endregion
@@ -72,16 +71,20 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     private CharacterLogic<LaraCroft> _currentLogic;
     private CharacterLogic<LaraCroft> _pendingLogic;
+    private LaraGroundTransition _transitionLogic;
     private Dictionary<Type, CharacterLogic<LaraCroft>> _logics = new Dictionary<Type,CharacterLogic<LaraCroft>>();
 
     public void GotoState<T>() where T : CharacterLogic<LaraCroft>
     {
+        print(typeof(T));
         _pendingLogic = _logics[typeof(T)];
     }
 
-    private void SpawnLogic<T>() where T : CharacterLogic<LaraCroft>
+    private T SpawnLogic<T>() where T : CharacterLogic<LaraCroft>
     {
-        _logics[typeof(T)] = gameObject.AddComponent<T>();
+        var logic = gameObject.AddComponent<T>();
+        _logics[typeof(T)] = logic;
+        return logic;
     }
 
     #endregion
@@ -98,6 +101,8 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         SpawnLogic<LaraWalking>();
         SpawnLogic<LaraJumping>();
         SpawnLogic<LaraFalling>();
+        _transitionLogic = SpawnLogic<LaraGroundTransition>();
+
         GotoState<LaraWalking>();
     }
 
@@ -111,16 +116,10 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
             _pendingLogic = null;
         }
 
-        if (_moveTransition != null)
-        {
-            ProcessMoveTransition();
-            return;
-        }
-
         InputSettings.ProcessInput();
         SortInteractions();
 
-        if (!InputFrozen)
+        //if (!InputFrozen)
         {
             ProcessMove();
             ProcessAction();
@@ -241,7 +240,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
             var move = _characterController.velocity;
             var rotation = transform.rotation;
 
-            _currentLogic.PerformMove(ref move, ref rotation);
+            _currentLogic.CalcVelocityAndRotation(ref move, ref rotation);
 
             ApplyMove(move);
             transform.rotation = rotation;
@@ -301,40 +300,8 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// <param name="run">true if the character should run, false to walk</param>
     private void MakeMoveTransition(Vector3 targetPosition, Quaternion targetRotation, Action finalAction, bool run = false)
     {
-        var moveSpeed = run ? RunSpeed : WalkSpeed;
-        _moveTransition = new MoveTransition
-        {
-            TargetPosition = targetPosition,
-            TargetRotation = targetRotation,
-            RemainingTime = Vector3.Distance(transform.position, targetPosition) / moveSpeed,
-            Action = finalAction,
-            Run = run
-        };
-    }
-
-    /// <summary>
-    /// Move linearly the character to a given point
-    /// </summary>
-    private void ProcessMoveTransition()
-    {
-        var position = Vector3.Lerp(transform.position, _moveTransition.TargetPosition, Time.deltaTime / _moveTransition.RemainingTime);
-        var delta = position - transform.position;
-        _characterController.Move(delta);
-        transform.rotation = Quaternion.Lerp(transform.rotation, _moveTransition.TargetRotation, Time.deltaTime / _moveTransition.RemainingTime);
-
-        _moveTransition.RemainingTime -= Time.deltaTime;
-
-        if (_moveTransition.RemainingTime <= .0f)
-        {
-            _animator.SetBool("Move", false);
-            if (_moveTransition.Action != null) _moveTransition.Action();
-            _moveTransition = null;
-        }
-        else
-        {
-            _animator.SetBool("Move", true);
-            _animator.SetBool("Walk", !_moveTransition.Run);
-        }
+        _transitionLogic.InitializeTransition(targetPosition, targetRotation, finalAction, run);
+        GotoState<LaraGroundTransition>();
     }
 
     #endregion
@@ -441,13 +408,4 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     #endregion
 
-}
-
-public class MoveTransition
-{
-    public Vector3 TargetPosition;
-    public Quaternion TargetRotation;
-    public float RemainingTime;
-    public Action Action;
-    public bool Run;
 }

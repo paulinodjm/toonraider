@@ -14,13 +14,31 @@ public abstract class CharacterLogic<Character_T> : MonoBehaviour, ICharacter<Ch
         Character = GetComponent<Character_T>();
     }
 
-    public abstract void PerformMove(ref Vector3 velocity, ref Quaternion rotation);
-
     public void GotoState<State_T>() where State_T : CharacterLogic<Character_T>
     {
         Character.GotoState<State_T>();
     }
 
-    public virtual void Landed() { }
-    public virtual void Falling() { }
+    /// <summary>
+    /// Called once per frame to set the news character velocity and rotation 
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="rotation"></param>
+    public abstract void CalcVelocityAndRotation(ref Vector3 velocity, ref Quaternion rotation);
+
+    /// <summary>
+    /// Called once when the character touchs the ground
+    /// </summary>
+    public virtual void Landed() 
+    {
+        // nothing to do
+    }
+
+    /// <summary>
+    /// Called once when the character leaves the ground
+    /// </summary>
+    public virtual void Falling() 
+    {
+        // nothing to do
+    }
 }
