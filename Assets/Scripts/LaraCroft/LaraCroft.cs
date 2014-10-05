@@ -40,7 +40,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     #endregion
     #region Movement
 
-    public bool InputFrozen { get; set; }
     public Vector3 Velocity { get; private set; }
     public bool IsGrounded { get; private set; }
 
@@ -60,7 +59,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     {
         get
         {
-            return !InputFrozen && IsGrounded;
+            return IsGrounded && _currentLogic.GetType() != typeof(LaraInteracting); // <-- you can do better than that!
         }
     }
 
@@ -76,7 +75,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     public void GotoState<T>() where T : CharacterLogic<LaraCroft>
     {
-        print(typeof(T));
         _pendingLogic = _logics[typeof(T)];
     }
 
@@ -102,6 +100,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         SpawnLogic<LaraJumping>();
         SpawnLogic<LaraFalling>();
         _transitionLogic = SpawnLogic<LaraGroundTransition>();
+        SpawnLogic<LaraInteracting>();
 
         GotoState<LaraWalking>();
     }
@@ -119,11 +118,8 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         InputSettings.ProcessInput();
         SortInteractions();
 
-        //if (!InputFrozen)
-        {
-            ProcessMove();
-            ProcessAction();
-        }
+        ProcessMove();
+        ProcessAction();
 	}
 
     void OnGUI()
@@ -185,7 +181,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
             () => _animator.SetTrigger(_pendingInteraction.GetActionName(this)),
             true
         );
-        InputFrozen = true;
     }
 
     /// <summary>
@@ -341,7 +336,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     public void FreezeMove()
     {
-        InputFrozen = true;
+        Debug.LogWarning("Obsolete");
     }
 
     /// <summary>
@@ -349,7 +344,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     public void AllowMove()
     {
-        InputFrozen = false;
+        GotoState<LaraWalking>();
     }
 
     /// <summary>

@@ -61,8 +61,12 @@ public class LaraGroundTransition : LaraWalking
         if (RemainingTime <= .0f)
         {
             _animator.SetBool("Move", false);
-            if (Action != null) Action();
-            GotoState<LaraWalking>(); // <- remove this for a softer implementation
+            if (Action != null)
+            {
+                Action();
+                Action = null;
+            }
+            GotoState<LaraInteracting>(); // <- remove this for a softer implementation
         }
         else
         {
