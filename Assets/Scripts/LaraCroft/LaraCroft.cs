@@ -95,10 +95,10 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         _characterController = GetComponent<CharacterController>();
         _animator = GetComponent<Animator>();
 
-        SpawnLogic<CharacterWalking>();
-        SpawnLogic<CharacterJumping>();
-        SpawnLogic<CharacterFalling>();
-        GotoState<CharacterWalking>();
+        SpawnLogic<LaraWalking>();
+        SpawnLogic<LaraJumping>();
+        SpawnLogic<LaraFalling>();
+        GotoState<LaraWalking>();
     }
 
 	void Update () 
@@ -450,112 +450,4 @@ public class MoveTransition
     public float RemainingTime;
     public Action Action;
     public bool Run;
-}
-
-public class CharacterWalking : CharacterLogic<LaraCroft>
-{
-    public override void PerformMove(ref Vector3 velocity, ref Quaternion rotation)
-    {
-        var inputDir = ProcessInput();
-        velocity = CalcVelocity(inputDir, velocity);
-        rotation = CalcRotation(velocity, rotation);
-        ApplyGravity(ref velocity);
-    }
-
-    protected virtual Vector3 ProcessInput()
-    {
-        Vector3 forward, right;
-        Character.GetAxis(out forward, out right);
-
-        forward *= Character.InputSettings.MoveDirection.z;
-        right *= Character.InputSettings.MoveDirection.x;
-        return (forward + right).normalized;
-    }
-
-    protected virtual Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)
-    {
-        var moveSpeed = Character.InputSettings.ButWalk ? Character.WalkSpeed : Character.RunSpeed;
-        return inputDir * moveSpeed;
-    }
-
-    protected virtual Quaternion CalcRotation(Vector3 velocity, Quaternion rotation)
-    {
-        velocity.y = 0;
-        var desiredRotation = (velocity.magnitude != 0.0f) ? Quaternion.LookRotation(velocity) : rotation;
-        return Quaternion.Lerp(rotation, desiredRotation, Character.RotationSpeed);
-    }
-
-    protected virtual void ApplyGravity(ref Vector3 move)
-    {
-        if (Character.InputSettings.ButJump)
-        {
-            move.y = Character.JumpSpeed;
-        }
-        else
-        {
-            move.y = -5;
-        }
-    }
-
-    public override void Falling()
-    {
-        GotoState<CharacterJumping>();
-    }
-}
-
-public class CharacterJumping : CharacterWalking
-{
-    protected override Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)
-    {
-        var maxSpeed = Character.RunSpeed;
-        if (inputDir.x == 0 && inputDir.y == 0)
-        {
-            maxSpeed = velocity.magnitude - (Character.JumpAccel * Time.deltaTime);
-            if (maxSpeed < .0f)
-                maxSpeed = .0f;
-        }
-
-        var move = velocity + (inputDir * Character.JumpAccel * Time.deltaTime);
-        move.y = 0;
-        move = Vector3.ClampMagnitude(move, maxSpeed);
-        move.y = velocity.y;
-        return move;
-
-        /*
-        var move = velocity + (inputDir * Player.JumpAccel * Time.deltaTime);
-        move.y = 0;
-        if (move.magnitude > Player.RunSpeed)
-        {
-            move = Vector3.ClampMagnitude(move, Player.RunSpeed);
-        }
-        move.y = velocity.y;
-        return move;
-        //*/
-    }
-
-    protected override void ApplyGravity(ref Vector3 move)
-    {
-        move.y -= Character.Gravity * Time.deltaTime;
-        if (move.y <= -Character.FallingSpeed)
-            GotoState<CharacterFalling>();
-    }
-
-    public override void Landed()
-    {
-        GotoState<CharacterWalking>();
-    }
-}
-
-public class CharacterFalling : CharacterJumping
-{
-    public override void Landed()
-    {
-        base.Landed();
-        print("Ouch!");
-    }
-
-    protected override void ApplyGravity(ref Vector3 move)
-    {
-        move.y -= Character.Gravity * Time.deltaTime;
-    }
 }
