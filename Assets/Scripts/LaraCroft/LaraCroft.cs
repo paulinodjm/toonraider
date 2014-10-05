@@ -48,19 +48,18 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     #endregion
     #region Interactions
 
-    private List<Interaction> _availableInteractions = new List<Interaction>();
-    private Interaction _nearestInteraction;
-    private Interaction _pendingInteraction;
+    private List<Interaction_Old> _availableInteractions = new List<Interaction_Old>();
+    private Interaction_Old _nearestInteraction;
+    private Interaction_Old _pendingInteraction;
 
     #endregion
     #region Picking up
 
-    public bool CanInteract
+    public bool CanInteractWith(Interaction_Old interaction)
     {
-        get
-        {
-            return IsGrounded && _currentLogic.GetType() != typeof(LaraInteracting); // <-- you can do better than that!
-        }
+        if (_currentLogic == null) return false;
+
+        return _currentLogic.CanInteractWith(interaction);
     }
 
     public GameObject HoldItem { get; private set; }
@@ -126,10 +125,10 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     {
         GUILayout.Label(Inventory.Items.Count() + " items dans l'inventaire");
 
-        if (_nearestInteraction != null && CanInteract)
+        if (_nearestInteraction != null && CanInteractWith(_nearestInteraction))
         {
             var strBuilder = new StringBuilder();
-            strBuilder.Append((_nearestInteraction.GetStatusFor(this) == Interaction.Status.Avalaible ? " > " : " ? "));
+            strBuilder.Append((_nearestInteraction.GetStatusFor(this) == Interaction_Old.Status.Avalaible ? " > " : " ? "));
             strBuilder.Append(_nearestInteraction.Caption);
             GUILayout.Label(strBuilder.ToString());
         }
@@ -145,7 +144,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         {
             var interaction = _availableInteractions[i];
 
-            if (interaction.GetStatusFor(this) == Interaction.Status.Unavailable)
+            if (interaction.GetStatusFor(this) == Interaction_Old.Status.Unavailable)
             {
                 _availableInteractions.Remove(interaction);
             }
@@ -162,11 +161,11 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     private void ProcessAction()
     {
         if (_nearestInteraction == null ||
-            !CanInteract ||
+            !CanInteractWith(_nearestInteraction) ||
             !InputSettings.ButAction
         ) return;
 
-        if (_nearestInteraction.GetStatusFor(this) == Interaction.Status.Incomplete)
+        if (_nearestInteraction.GetStatusFor(this) == Interaction_Old.Status.Incomplete)
         {
             print("I need something!");
             return;
@@ -304,7 +303,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     void OnTriggerEnter(Collider other)
     {
-        var interaction = (Interaction)other.gameObject;
+        var interaction = (Interaction_Old)other.gameObject;
         if (interaction != null)
         {
             _availableInteractions.Add(interaction);
@@ -313,7 +312,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     void OnTriggerExit(Collider other)
     {
-        var interaction = (Interaction)other.gameObject;
+        var interaction = (Interaction_Old)other.gameObject;
         if (interaction != null)
         {
             _availableInteractions.Remove(interaction);

@@ -75,6 +75,11 @@ public class LaraGroundTransition : LaraWalking
         }
     }
 
+    public override bool CanInteractWith(Interaction_Old interaction)
+    {
+        return false;
+    }
+
     protected override Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)
     {
         var position = Vector3.Lerp(transform.position, TargetPosition, Time.deltaTime / RemainingTime);

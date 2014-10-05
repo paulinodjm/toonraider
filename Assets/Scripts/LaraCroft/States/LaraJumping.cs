@@ -6,6 +6,12 @@ using System.Collections;
 /// </summary>
 public class LaraJumping : LaraWalking
 {
+    public override bool CanInteractWith(Interaction_Old interaction)
+    {
+        var ledge = interaction as Ledge;
+        return ledge != null;
+    }
+
     protected override Vector3 CalcVelocity(Vector3 inputDir, Vector3 velocity)
     {
         var maxSpeed = Character.RunSpeed;

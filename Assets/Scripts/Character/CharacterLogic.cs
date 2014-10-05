@@ -9,6 +9,13 @@ public abstract class CharacterLogic<Character_T> : MonoBehaviour, ICharacter<Ch
     /// </summary>
     public Character_T Character { get; private set; }
 
+    /// <summary>
+    /// Tell if the character can interact with the given interaction
+    /// </summary>
+    /// <param name="interaction"></param>
+    /// <returns></returns>
+    public abstract bool CanInteractWith(Interaction_Old interaction);
+
     protected void Awake()
     {
         Character = GetComponent<Character_T>();

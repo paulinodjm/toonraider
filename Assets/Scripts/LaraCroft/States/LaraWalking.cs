@@ -21,6 +21,11 @@ public class LaraWalking : CharacterLogic<LaraCroft>
         GotoState<LaraJumping>();
     }
 
+    public override bool CanInteractWith(Interaction_Old interaction)
+    {
+        return true;
+    }
+
     #endregion
 
     /// <summary>

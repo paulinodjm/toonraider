@@ -16,4 +16,9 @@ public class LaraFalling : LaraJumping
     {
         move.y -= Character.Gravity * Time.deltaTime;
     }
+
+    public override bool CanInteractWith(Interaction_Old interaction)
+    {
+        return false;
+    }
 }

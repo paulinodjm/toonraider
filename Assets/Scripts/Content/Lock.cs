@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Lock : Interaction 
+public class Lock : Interaction_Old 
 {
     public bool Used;
     public string KeyName;
@@ -25,7 +25,7 @@ public class Lock : Interaction
         rotation = InteractPoint.rotation;
     }
 
-    public override Interaction.Status GetStatusFor(LaraCroft laraCroft)
+    public override Interaction_Old.Status GetStatusFor(LaraCroft laraCroft)
     {
         if (base.GetStatusFor(laraCroft) == Status.Unavailable || Used)
         {

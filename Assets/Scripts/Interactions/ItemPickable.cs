@@ -5,7 +5,7 @@ using System.Collections;
 /// Item dropped in the world that can be picked by the character.
 /// </summary>
 [AddComponentMenu("TombRaider/ItemPickable")]
-public class ItemPickable : Interaction 
+public class ItemPickable : Interaction_Old 
 {
     public Item InventoryItem;
 
