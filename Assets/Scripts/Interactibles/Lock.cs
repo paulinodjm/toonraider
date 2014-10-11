@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class Lock : Interactible 
 {
@@ -46,5 +45,10 @@ public class Lock : Interactible
     {
         Used = true;
         Using();
+    }
+
+    public override Interaction GetInteractionFor(LaraCroft user)
+    {
+        return null;
     }
 }

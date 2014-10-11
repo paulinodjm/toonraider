@@ -9,6 +9,20 @@ public class ItemPickable : Interactible
 {
     public Item InventoryItem;
 
+    public GameObject VisibleItem;
+
+    public bool IsPickable 
+    { 
+        get
+        {
+            return VisibleItem.activeSelf;
+        }
+        set
+        {
+            VisibleItem.SetActive(value);
+        }
+    }
+
     public override string Caption
     {
         get { return "Ramasser " + InventoryItem.Name; }
@@ -30,11 +44,16 @@ public class ItemPickable : Interactible
 
     public override void NotifyUsed()
     {
-        gameObject.SetActive(false);
+        IsPickable = false; 
     }
 
     public static explicit operator ItemPickable(GameObject gameObject)
     {
         return gameObject.GetComponent<ItemPickable>();
+    }
+
+    public override Interaction GetInteractionFor(LaraCroft user)
+    {
+        return IsPickable ? new PickupItem(user, this) : null;
     }
 }

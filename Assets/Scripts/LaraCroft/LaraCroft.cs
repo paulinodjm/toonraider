@@ -99,17 +99,21 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     #region Interactions
 
-    private List<Interactible> _availableInteractions = new List<Interactible>();
+    private List<Interactible> _availableInteractibles = new List<Interactible>();
 
     /// <summary>
     /// The nearest interaction (the next to be used)
     /// </summary>
-    private Interactible _nearestInteraction;
+    private Interactible _nearestInteractible;
 
     /// <summary>
     /// The current interaction, if any
     /// </summary>
-    private Interactible _currentInteraction;
+    private Interactible _currentInteractible;
+
+    private Interaction _nearestInteraction;
+
+    private Interaction _currentInteraction;
 
     #endregion
 
@@ -155,6 +159,8 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// The state dictionnary, by type
     /// </summary>
     private Dictionary<Type, CharacterLogic<LaraCroft>> _logics = new Dictionary<Type,CharacterLogic<LaraCroft>>();
+    
+    private int _interactionCount;
 
     /// <summary>
     /// Jump to the next state
@@ -217,12 +223,14 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     void OnGUI()
     {
         GUILayout.Label(Inventory.Items.Count() + " items dans l'inventaire");
+        GUILayout.Label(_interactionCount + "/" + _availableInteractibles.Count);
 
-        if (_nearestInteraction != null && CanInteractWith(_nearestInteraction))
+        if (_nearestInteraction != null)
         {
             var strBuilder = new StringBuilder();
-            strBuilder.Append((_nearestInteraction.GetStatusFor(this) == Interactible.Status.Avalaible ? " > " : " ? "));
+            strBuilder.Append(_nearestInteraction.IsAvailable ? " > " : " ? ");
             strBuilder.Append(_nearestInteraction.Caption);
+            
             GUILayout.Label(strBuilder.ToString());
         }
     }
@@ -234,21 +242,24 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void SortInteractions()
     {
+        _nearestInteractible = null;
         _nearestInteraction = null;
 
-        for (var i = 0; i < _availableInteractions.Count; i++)
-        {
-            var interaction = _availableInteractions[i];
+        var interactions = new List<Interaction>();
 
-            if (interaction.GetStatusFor(this) == Interactible.Status.Unavailable)
-            {
-                _availableInteractions.Remove(interaction);
-            }
-            else if (_nearestInteraction == null)
-            {
-                _nearestInteraction = interaction;
-            }
+        for (var i = 0; i < _availableInteractibles.Count; i++)
+        {
+            var interactible = _availableInteractibles[i];
+            if (!CanInteractWith(interactible)) continue;
+
+            var interaction = interactible.GetInteractionFor(this);
+            if (interaction == null) continue;
+
+            interactions.Add(interaction);
+            _nearestInteraction = interaction;
         }
+
+        _interactionCount = interactions.Count;
     }
 
     /// <summary>
@@ -256,24 +267,15 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void ProcessAction()
     {
-        if (_nearestInteraction == null ||
-            !CanInteractWith(_nearestInteraction) ||
-            !InputSettings.ButAction
-        ) return;
-
-        if (_nearestInteraction.GetStatusFor(this) == Interactible.Status.Incomplete)
-        {
-            print("I need something!");
-            return;
-        }
+        if (!InputSettings.ButAction || _nearestInteraction == null) return;
 
         _currentInteraction = _nearestInteraction;
+        _nearestInteraction = null;
 
-        Vector3 usePosition; Quaternion useRotation;
-        _currentInteraction.CalcUsePosRot(this, out usePosition, out useRotation);
         MakeMoveTransition(
-            usePosition, useRotation,
-            () => _animator.SetTrigger(_currentInteraction.GetActionName(this)),
+            _currentInteraction.UsePosition,
+            _currentInteraction.UseRotation,
+            AnimateInteraction,
             true
         );
     }
@@ -288,6 +290,18 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         HoldItem.transform.parent = HandItem.transform;
         HoldItem.transform.localPosition = Vector3.zero;
         HoldItem.transform.localRotation = Quaternion.identity;
+    }
+
+    /// <summary>
+    /// Process the interaction, and plays the associated animation
+    /// </summary>
+    private void AnimateInteraction()
+    {
+        var triggerName = _currentInteraction.Use();
+        if (triggerName != null)
+        {
+            _animator.SetTrigger(triggerName);
+        }
     }
 
     #endregion
@@ -406,19 +420,19 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
 
     void OnTriggerEnter(Collider other)
     {
-        var interaction = (Interactible)other.gameObject;
-        if (interaction != null)
+        var interactible = (Interactible)other.gameObject;
+        if (interactible != null)
         {
-            _availableInteractions.Add(interaction);
+            _availableInteractibles.Add(interactible);
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        var interaction = (Interactible)other.gameObject;
-        if (interaction != null)
+        var interactible = (Interactible)other.gameObject;
+        if (interactible != null)
         {
-            _availableInteractions.Remove(interaction);
+            _availableInteractibles.Remove(interactible);
         }
     }
 
@@ -455,7 +469,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void PickupItem()
     {
-        var pendingItem = _currentInteraction as ItemPickable;
+        var pendingItem = _currentInteraction.Interactible as ItemPickable;
 
         pendingItem.NotifyUsed();
         GrabItem((GameObject)Instantiate(pendingItem.InventoryItem.Prefab));
@@ -466,7 +480,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void BagIn()
     {
-        var pendingItem = _currentInteraction as ItemPickable;
+        var pendingItem = _currentInteraction.Interactible as ItemPickable;
 
         Destroy(HoldItem);
         HoldItem = null;
@@ -480,7 +494,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void BagOut()
     {
-        var pendingLock = _currentInteraction as Lock;
+        var pendingLock = _currentInteractible as Lock;
         var usingItem = Inventory.Items.Find(pendingLock.KeyName);
 
         GrabItem((GameObject)Instantiate(usingItem.Prefab));
@@ -493,15 +507,15 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void ItemUsed()
     {
-        var nearestLock = _currentInteraction as Lock;
+        var nearestLock = _currentInteraction.Interactible as Lock;
 
         HoldItem.transform.parent = nearestLock.KeyPosition;
         HoldItem.transform.localPosition = Vector3.zero;
         HoldItem.transform.localRotation = Quaternion.identity;
         HoldItem = null;
 
-        _currentInteraction.NotifyUsed();
-        _currentInteraction = null;
+        _currentInteractible.NotifyUsed();
+        _currentInteractible = null;
     }
 
     #endregion

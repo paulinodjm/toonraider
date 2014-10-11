@@ -127,4 +127,9 @@ public class Ledge : Interactible
     {
         return "Idle";
     }
+
+    public override Interaction GetInteractionFor(LaraCroft user)
+    {
+        return null;
+    }
 }
