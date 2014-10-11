@@ -26,9 +26,9 @@ public abstract class CharacterLogic<Character_T> : MonoBehaviour, ICharacter<Ch
         Character = GetComponent<Character_T>();
     }
 
-    public void GotoState<State_T>() where State_T : CharacterLogic<Character_T>
+    public State_T GotoState<State_T>() where State_T : CharacterLogic<Character_T>
     {
-        Character.GotoState<State_T>();
+        return Character.GotoState<State_T>();
     }
 
     /// <summary>

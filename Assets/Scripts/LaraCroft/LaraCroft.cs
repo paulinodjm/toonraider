@@ -102,11 +102,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     private List<Interactible> _availableInteractibles = new List<Interactible>();
 
     /// <summary>
-    /// The nearest interaction (the next to be used)
-    /// </summary>
-    private Interactible _nearestInteractible;
-
-    /// <summary>
     /// The current interaction, if any
     /// </summary>
     private Interactible _currentInteractible;
@@ -166,9 +161,10 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// Jump to the next state
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public void GotoState<T>() where T : CharacterLogic<LaraCroft>
+    public T GotoState<T>() where T : CharacterLogic<LaraCroft>
     {
         _pendingLogic = _logics[typeof(T)];
+        return (T)_pendingLogic;
     }
 
     /// <summary>
@@ -181,6 +177,16 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         var logic = gameObject.AddComponent<T>();
         _logics[typeof(T)] = logic;
         return logic;
+    }
+
+    /// <summary>
+    /// Returns a state instance
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    private T GetState<T>() where T : CharacterLogic<LaraCroft>
+    {
+        return (T)_logics[typeof(T)];
     }
 
     #endregion
@@ -242,7 +248,6 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void SortInteractions()
     {
-        _nearestInteractible = null;
         _nearestInteraction = null;
 
         var interactions = new List<Interaction>();
@@ -301,6 +306,13 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
         if (triggerName != null)
         {
             _animator.SetTrigger(triggerName);
+        }
+        else
+        {
+            var interactionState = GetState<LaraInteracting>();
+            interactionState.ForceQuit = true;
+
+            AllowMove();
         }
     }
 

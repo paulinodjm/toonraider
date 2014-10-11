@@ -8,5 +8,5 @@ public interface ICharacter<Character_T> where Character_T : Component, ICharact
     /// <summary>
     /// Ask the player to go to a given state.
     /// </summary>
-    void GotoState<State_T>() where State_T : CharacterLogic<Character_T>;
+    State_T GotoState<State_T>() where State_T : CharacterLogic<Character_T>;
 }

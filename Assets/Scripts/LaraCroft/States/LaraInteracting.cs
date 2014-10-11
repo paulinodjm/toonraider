@@ -6,6 +6,22 @@ using System.Collections;
 /// </summary>
 public class LaraInteracting : LaraWalking 
 {
+    /// <summary>
+    /// Force the state interruption, even if the animation has raised no event
+    /// </summary>
+    public bool ForceQuit { get; set; }
+
+    public override void CalcVelocityAndRotation(ref Vector3 velocity, ref Quaternion rotation)
+    {
+        if (ForceQuit)
+        {
+            GotoState<LaraWalking>();
+            ForceQuit = false;
+        }
+
+        base.CalcVelocityAndRotation(ref velocity, ref rotation);
+    }
+
     public override bool CanInteractWith(Interactible interaction)
     {
         return false;

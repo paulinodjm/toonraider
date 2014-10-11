@@ -49,6 +49,6 @@ public class Lock : Interactible
 
     public override Interaction GetInteractionFor(LaraCroft user)
     {
-        return null;
+        return new MissingItem(user, this);
     }
 }
