@@ -6,7 +6,13 @@ public class PickupItem : Interaction
     public PickupItem(LaraCroft user, Interactible interactible) :
         base(user, interactible)
     {
-        // nothing to do
+        var transform = interactible.transform;
+
+        var useDirection = (transform.position - user.transform.position).normalized;
+        _usePosition = transform.position - useDirection * user.PickupDistance;
+
+        useDirection.y = 0;
+        _useRotation = Quaternion.LookRotation(useDirection);
     }
 
     public override string Caption
@@ -19,14 +25,18 @@ public class PickupItem : Interaction
         get { return true; }
     }
 
-    public override Vector3 UsePosition
+    private Vector3 _usePosition;
+
+    public override Vector3 UsePosition 
     {
-        get { return User.transform.position; }
+        get { return _usePosition; }
     }
 
-    public override Quaternion UseRotation
+    private Quaternion _useRotation;
+
+    public override Quaternion UseRotation 
     {
-        get { return User.transform.rotation; }
+        get { return _useRotation; }
     }
 
     public override string Use()
