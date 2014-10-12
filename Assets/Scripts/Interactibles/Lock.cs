@@ -2,7 +2,7 @@
 
 public class Lock : Interactible 
 {
-    public bool Used;
+    public bool IsUsed;
     public string KeyName;
 
     public Transform KeyPosition;
@@ -26,7 +26,7 @@ public class Lock : Interactible
 
     public override Interactible.Status GetStatusFor(LaraCroft laraCroft)
     {
-        if (base.GetStatusFor(laraCroft) == Status.Unavailable || Used)
+        if (base.GetStatusFor(laraCroft) == Status.Unavailable || IsUsed)
         {
             return Status.Unavailable;
         }
@@ -43,12 +43,14 @@ public class Lock : Interactible
 
     public override void NotifyUsed()
     {
-        Used = true;
+        IsUsed = true;
         Using();
     }
 
     public override Interaction GetInteractionFor(LaraCroft user)
     {
+        if (IsUsed) return null;
+
         var hasKey = user.Inventory.Items.Find(KeyName) != null;
         var interaction = (Interaction)null;
         
