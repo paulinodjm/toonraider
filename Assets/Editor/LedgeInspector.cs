@@ -58,6 +58,11 @@ public class LedgeInspector : Editor
         EditorGUILayout.ObjectField("Previous", Ledge.Previous, typeof(Ledge));
         EditorGUILayout.ObjectField("Next", Ledge.Next, typeof(Ledge));
 
+        if (Ledge.Next != null)
+        {
+            DrawInvertButton();
+        }
+
         if (Ledge.Next != null && Ledge.Previous != null)
         {
             DrawBreakButton();
@@ -117,6 +122,14 @@ public class LedgeInspector : Editor
         Ledge.Previous = null;
 
         Ledge.transform.position = spawnPosition;
+    }
+
+    private void DrawInvertButton()
+    {
+        var clicked = GUILayout.Button("Switch Direction");
+        if (!clicked) return;
+
+        Ledge.InvertGrabDirection();
     }
 
     /// <summary>

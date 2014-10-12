@@ -21,6 +21,9 @@ public class Ledge : Interactible
     [SerializeField()]
     private Ledge _next;
 
+    /// <summary>
+    /// Next ledge, if chained
+    /// </summary>
     public Ledge Next
     {
         get { return _next; }
@@ -39,6 +42,9 @@ public class Ledge : Interactible
     [SerializeField()]
     private Ledge _previous;
 
+    /// <summary>
+    /// Previous ledge, if chained
+    /// </summary>
     public Ledge Previous
     {
         get { return _previous; }
@@ -53,6 +59,21 @@ public class Ledge : Interactible
                 _previous._next = this;
         }
     }
+
+    /// <summary>
+    /// The grab direction
+    /// </summary>
+    public Vector3 GrabDirection 
+    { 
+        get
+        {
+            var direction = Vector3.Cross(transform.position - Next.transform.position, Vector3.up).normalized;
+            return _isInverted ? -direction : direction;
+        }
+    }
+
+    [SerializeField()]
+    private bool _isInverted = false;
 
     #endregion
 
@@ -74,6 +95,9 @@ public class Ledge : Interactible
         DrawHandle();
     }
 
+    /// <summary>
+    /// Draws the ledge shape, in editor
+    /// </summary>
     private void DrawLedge()
     {
         var center = Vector3.Lerp(transform.position, Next.transform.position, .5f);
@@ -84,8 +108,13 @@ public class Ledge : Interactible
         Gizmos.color = LedgeColor;
         Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
         Gizmos.DrawCube(Vector3.zero, size);
-    }
 
+        Debug.DrawRay(center, GrabDirection);
+    }
+    
+    /// <summary>
+    /// Draws the handle shape, in editor
+    /// </summary>
     private void DrawHandle()
     {
         Gizmos.color = HandleColor;
@@ -93,6 +122,10 @@ public class Ledge : Interactible
         Gizmos.DrawSphere(Vector3.zero, HandleRadius);
     }
 
+    /// <summary>
+    /// Spawn the capsule collider in game mode
+    /// </summary>
+    /// <returns>The capsule collider</returns>
     private CapsuleCollider SpawnCapsule()
     {
         var distance = Vector3.Distance(transform.position, Next.transform.position);
@@ -112,5 +145,13 @@ public class Ledge : Interactible
     public override Interaction GetInteractionFor(LaraCroft user)
     {
         return null;
+    }
+
+    /// <summary>
+    /// Invert the grab direction
+    /// </summary>
+    public void InvertGrabDirection()
+    {
+        _isInverted = !_isInverted;
     }
 }
