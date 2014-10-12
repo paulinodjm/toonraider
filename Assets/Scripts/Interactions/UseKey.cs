@@ -36,6 +36,6 @@ public class UseKey : Interaction
 
     public override string Use()
     {
-        return null;
+        return "UseKey";
     }
 }

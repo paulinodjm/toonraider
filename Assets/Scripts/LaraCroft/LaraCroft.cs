@@ -506,7 +506,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void BagOut()
     {
-        var pendingLock = _currentInteractible as Lock;
+        var pendingLock = (Lock)_currentInteraction.Interactible;
         var usingItem = Inventory.Items.Find(pendingLock.KeyName);
 
         GrabItem((GameObject)Instantiate(usingItem.Prefab));
@@ -519,15 +519,14 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void ItemUsed()
     {
-        var nearestLock = _currentInteraction.Interactible as Lock;
+        var nearestLock = (Lock)_currentInteraction.Interactible;
 
         HoldItem.transform.parent = nearestLock.KeyPosition;
         HoldItem.transform.localPosition = Vector3.zero;
         HoldItem.transform.localRotation = Quaternion.identity;
         HoldItem = null;
 
-        _currentInteractible.NotifyUsed();
-        _currentInteractible = null;
+        nearestLock.NotifyUsed();
     }
 
     #endregion
