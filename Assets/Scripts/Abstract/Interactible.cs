@@ -23,41 +23,9 @@ public abstract class Interactible : MonoBehaviour
         return obj.GetComponent<Interactible>();
     }
 
-    #region Old Interface (obsolete)
-
-    [Obsolete()]
-    public abstract string Caption { get; }
-
     /// <summary>
-    /// Returns the nearest position to interact with gameObject
+    /// Notify the interactible that it has been used
+    /// TODO : Move this to Interaction
     /// </summary>
-    [Obsolete()]
-    public abstract void CalcUsePosRot(LaraCroft laraCroft, out Vector3 position, out Quaternion rotation);
-
-    /// <summary>
-    /// Return true if the player can use this interaction
-    /// </summary>
-    /// <param name="laraCroft"></param>
-    /// <returns></returns>
-    [Obsolete()]
-    public virtual Status GetStatusFor(LaraCroft laraCroft)
-    {
-        return gameObject.activeInHierarchy ? Status.Avalaible : Status.Unavailable;
-    }
-
-    [Obsolete()]
-    public abstract string GetActionName(LaraCroft laraCroft);
-
-    [Obsolete()]
     public virtual void NotifyUsed() { }
-
-    [Obsolete()]
-    public enum Status
-    {
-        Avalaible,
-        Incomplete,
-        Unavailable,
-    }
-
-    #endregion
 }

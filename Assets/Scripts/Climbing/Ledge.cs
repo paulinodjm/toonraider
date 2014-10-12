@@ -109,25 +109,6 @@ public class Ledge : Interactible
         return capsule;
     }
 
-    public override string Caption
-    {
-        get
-        {
-            return "Climb";
-        }
-    }
-
-    public override void CalcUsePosRot(LaraCroft laraCroft, out Vector3 position, out Quaternion rotation)
-    {
-        position = laraCroft.transform.position;
-        rotation = laraCroft.transform.rotation;
-    }
-
-    public override string GetActionName(LaraCroft laraCroft)
-    {
-        return "Idle";
-    }
-
     public override Interaction GetInteractionFor(LaraCroft user)
     {
         return null;
