@@ -49,6 +49,18 @@ public class Lock : Interactible
 
     public override Interaction GetInteractionFor(LaraCroft user)
     {
-        return new MissingItem(user, this);
+        var hasKey = user.Inventory.Items.Find(KeyName) != null;
+        var interaction = (Interaction)null;
+        
+        if (hasKey)
+        {
+            interaction = new UseKey(user, this);
+        }
+        else
+        {
+            interaction = new MissingItem(user, this);
+        }
+
+        return interaction;
     }
 }
