@@ -12,7 +12,7 @@ public class Ledge : Interactible
     public static readonly Color HandleColor = new Color(.7f, .8f, 1.0f, 0.9f);
     public static readonly float HandleRadius = 0.3f;
 
-    public static readonly float CapsuleRadius = 1.0f;
+    public static readonly float CapsuleRadius = 1.5f;
 
     #endregion
 
@@ -144,7 +144,17 @@ public class Ledge : Interactible
 
     public override Interaction GetInteractionFor(LaraCroft user)
     {
-        return null;
+        if (!user.IsGrounded) return null;
+
+        var groundPosition = user.transform.position;
+        if (groundPosition.y < transform.position.y) return null;
+
+        var grabPosition = CalcGrabPositionFor(user);
+        var characterController = user.GetComponent<CharacterController>();
+        var targetPosition = grabPosition + GrabDirection * characterController.radius;
+        Debug.DrawLine(grabPosition, targetPosition, Color.red);
+        
+        return new GrabLedgeDown(user, this, grabPosition);
     }
 
     /// <summary>
@@ -153,5 +163,11 @@ public class Ledge : Interactible
     public void InvertGrabDirection()
     {
         _isInverted = !_isInverted;
+    }
+
+    public Vector3 CalcGrabPositionFor(LaraCroft user)
+    {
+        var vector = transform.position - user.transform.position;
+        return Vector3.Project(vector, GrabDirection) + user.transform.position;
     }
 }

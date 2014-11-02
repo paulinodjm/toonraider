@@ -66,6 +66,7 @@ public class LaraGroundTransition : LaraWalking
                 Action();
                 Action = null;
             }
+            
             GotoState<LaraInteracting>(); // <- remove this for a softer implementation
         }
         else
@@ -99,7 +100,17 @@ public class LaraGroundTransition : LaraWalking
         return Quaternion.Lerp(transform.rotation, TargetRotation, Time.deltaTime / RemainingTime);
     }
 
-    protected void Awake()
+    public override void Falling()
+    {
+        // n'appelle pas base.Falling() car provoque la chute.
+    }
+
+    protected override void ApplyGravity(ref Vector3 move)
+    {
+        // rien à faire
+    }
+
+    protected new void Awake()
     {
         base.Awake();
 
