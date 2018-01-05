@@ -27,7 +27,7 @@ public class HairMover : MonoBehaviour
             {
                 if (hair == null) continue;
 
-                hair.gameObject.rigidbody.AddForce(force);
+                hair.gameObject.GetComponent<Rigidbody>().AddForce(force);
             }
         }
     }

@@ -12,7 +12,7 @@ public class Lock : Interactible
 
     public void Using()
     {
-        audio.Play();
+        GetComponent<AudioSource>().Play();
     }
 
     public override void NotifyUsed()

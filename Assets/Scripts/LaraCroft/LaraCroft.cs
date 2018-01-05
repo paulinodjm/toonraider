@@ -457,7 +457,7 @@ public class LaraCroft : MonoBehaviour, ICharacter<LaraCroft>
     /// </summary>
     private void FootStep()
     {
-        audio.Play();
+        GetComponent<AudioSource>().Play();
     }
 
     /// <summary>
