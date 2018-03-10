@@ -1,42 +1,35 @@
 ﻿using UnityEngine;
 
-public class Lock : Interactible 
-{
-    public bool IsUsed;
+public class Lock : Interactible {
+  public bool IsUsed;
 
-    public string KeyName;
+  public string KeyName;
 
-    public Transform KeyPosition;
+  public Transform KeyPosition;
 
-    public Transform InteractPoint;
+  public Transform InteractPoint;
 
-    public void Using()
-    {
-        GetComponent<AudioSource>().Play();
+  public void Using() {
+    GetComponent<AudioSource>().Play();
+  }
+
+  public override void NotifyUsed() {
+    IsUsed = true;
+    Using();
+  }
+
+  public override Interaction GetInteractionFor(LaraCroft user) {
+    if (IsUsed) return null;
+
+    var hasKey = user.Inventory.Items.Find(KeyName) != null;
+    var interaction = (Interaction)null;
+
+    if (hasKey) {
+      interaction = new UseKey(user, this);
+    } else {
+      interaction = new MissingItem(user, this);
     }
 
-    public override void NotifyUsed()
-    {
-        IsUsed = true;
-        Using();
-    }
-
-    public override Interaction GetInteractionFor(LaraCroft user)
-    {
-        if (IsUsed) return null;
-
-        var hasKey = user.Inventory.Items.Find(KeyName) != null;
-        var interaction = (Interaction)null;
-        
-        if (hasKey)
-        {
-            interaction = new UseKey(user, this);
-        }
-        else
-        {
-            interaction = new MissingItem(user, this);
-        }
-
-        return interaction;
-    }
+    return interaction;
+  }
 }
