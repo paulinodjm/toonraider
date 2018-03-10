@@ -18,6 +18,7 @@ Thumbs.db
 *.suo
 *.orig
 *.orig.meta
+.vscode
 
 *.blend1
 *.blend1.meta
